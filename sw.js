@@ -16,7 +16,7 @@
 
    Para forzar una purga de caché al publicar cambios, subí el número de versión.
 */
-const VERSION = '2026-07-02-r39';
+const VERSION = '2026-07-02-r40';
 const CACHE = 'ecoinforme-' + VERSION;
 
 /* Solo se precachean recursos propios y estáticos (íconos, manifest, shell).
