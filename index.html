@@ -62,7 +62,7 @@ button{font-family:inherit;}
 /* ---------- MAIN ---------- */
 .main{flex:1;overflow-y:auto;height:100vh;}
 .topbar{position:sticky;top:0;background:var(--paper);border-bottom:1px solid var(--line);
-  padding:12px 28px;display:flex;align-items:center;justify-content:space-between;z-index:10;}
+  padding:calc(12px + env(safe-area-inset-top, 0px)) 28px 12px;display:flex;align-items:center;justify-content:space-between;z-index:10;}
 .topbar .crumbs{font-size:13px;color:var(--gray-2);}
 .topbar .crumbs b{color:var(--ink);font-weight:600;}
 .topbar .actions{display:flex;gap:8px;}
@@ -326,7 +326,7 @@ table.rp-table td.out{font-weight:700;}
     <div class="sidebar-foot">
       <button class="btn" id="btnNewPatient">+ Nuevo paciente</button>
       <div id="syncStatus" style="text-align:center;font-size:10px;color:var(--gray-3);margin-top:6px;">●  En línea</div>
-      <div style="text-align:center;font-size:10px;color:var(--gray-3);margin-top:2px;">build 2026-07-02-r38</div>
+      <div style="text-align:center;font-size:10px;color:var(--gray-3);margin-top:2px;">build 2026-07-02-r39</div>
     </div>
   </div>
   <div class="main" id="main"></div>
