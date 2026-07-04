@@ -326,7 +326,7 @@ table.rp-table td.out{font-weight:700;}
     <div class="sidebar-foot">
       <button class="btn" id="btnNewPatient">+ Nuevo paciente</button>
       <div id="syncStatus" style="text-align:center;font-size:10px;color:var(--gray-3);margin-top:6px;">●  En línea</div>
-      <div style="text-align:center;font-size:10px;color:var(--gray-3);margin-top:2px;">build 2026-07-02-r40</div>
+      <div style="text-align:center;font-size:10px;color:var(--gray-3);margin-top:2px;">build 2026-07-04-r41</div>
     </div>
   </div>
   <div class="main" id="main"></div>
@@ -405,7 +405,7 @@ const SupabaseClient = (()=>{
    ================================================================ */
 const DB = {
   _get(k){ try{ return JSON.parse(localStorage.getItem(k)||'null'); }catch(e){ return null; } },
-  _set(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} },
+  _set(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); return true; }catch(e){ return false; } },
 };
 
 const PatientService = (()=>{
@@ -451,6 +451,20 @@ const StudyService = (()=>{
   function toRow(pid,d){ return { patient_id:pid, fecha:d.fecha||null, data:d }; }
   function fromRow(r){ return { id:r.id, patientId:r.patient_id, savedAt:r.saved_at, fecha:r.fecha, ...(r.data||{}) }; }
 
+  /* Guarda el estudio completo en la caché local. Si no entra (cuota de
+     localStorage superada, p.ej. por imágenes), guarda una versión liviana SIN
+     imágenes y SIN marcar _full, de modo que al reabrir se relea desde Supabase
+     —que sí conserva las imágenes— en vez de devolver una copia vieja incompleta. */
+  function cacheFullStudy(study, patientId){
+    const pid = patientId!==undefined ? patientId : study.patientId;
+    const others = (DB._get(C)||[]).filter(s=>s.id!==study.id);
+    const full = {...study, patientId:pid, _full:true};
+    if(DB._set(C, [...others, full])) return;
+    /* Fallback: sin imágenes y sin _full → get() volverá a pedir a Supabase */
+    const {images, institutionLogo, _full, ...light} = full;
+    DB._set(C, [...others, {...light, patientId:pid}]);
+  }
+
   async function listByPatient(patientId){
     if(navigator.onLine){
       try{
@@ -478,20 +492,17 @@ const StudyService = (()=>{
     const row = await SupabaseClient.insert('studies', toRow(patientId, data));
     const study = fromRow(row);
     /* Guardar estudio completo en caché */
-    const cached = DB._get(C)||[];
-    cached.push({...study, patientId, _full:true});
-    DB._set(C, cached);
+    cacheFullStudy(study, patientId);
     return study;
   }
 
   async function update(id, data){
     await SupabaseClient.update('studies', id, { fecha:data.fecha||null, data });
-    /* Actualizar caché */
-    const cached = (DB._get(C)||[]).map(s=> s.id===id
-      ? {...s, ...data, savedAt:new Date().toISOString(), _full:true}
-      : s);
-    DB._set(C, cached);
-    return cached.find(s=>s.id===id);
+    /* Actualizar caché de forma resiliente (ver cacheFullStudy) */
+    const merged = {...(DB._get(C)||[]).find(s=>s.id===id), ...data,
+                    id, savedAt:new Date().toISOString()};
+    cacheFullStudy(merged, data.patientId);
+    return merged;
   }
 
   async function get(id){
@@ -502,10 +513,8 @@ const StudyService = (()=>{
     const rows = await SupabaseClient.select('studies',`select=*&id=eq.${id}`);
     if(!rows[0]) return null;
     const study = fromRow(rows[0]);
-    /* Guardar en caché */
-    const all = (DB._get(C)||[]).filter(s=>s.id!==id);
-    all.push({...study, patientId:study.patientId, _full:true});
-    DB._set(C, all);
+    /* Guardar en caché (resiliente a cuota) */
+    cacheFullStudy(study, study.patientId);
     return study;
   }
 
@@ -2656,7 +2665,7 @@ const App = (()=>{
     const file = e.target.files[0];
     if(!file) return;
     const reader = new FileReader();
-    reader.onload = ()=>{ currentStudy.institutionLogo = reader.result; renderInstLogoPreview(); renderReport(); };
+    reader.onload = async ()=>{ currentStudy.institutionLogo = await compressImage(reader.result, 600, 0.8); renderInstLogoPreview(); renderReport(); };
     reader.readAsDataURL(file);
   }
   function renderInstLogoPreview(){
@@ -2668,12 +2677,40 @@ const App = (()=>{
     if(thumb) thumb.onclick = ()=>{ currentStudy.institutionLogo = null; renderInstLogoPreview(); renderReport(); };
   }
 
+  /* Comprime una imagen (dataURL) a JPEG redimensionado para que el base64 sea
+     liviano y quepa tanto en Supabase como en la caché local (localStorage ~5MB).
+     Sin esto, fotos de Doppler a resolución completa saturan la caché y el estudio
+     se recarga desde una copia vieja sin imágenes. */
+  function compressImage(dataUrl, maxSide=1400, quality=0.72){
+    return new Promise((resolve)=>{
+      const img = new Image();
+      img.onload = ()=>{
+        let {width:w, height:h} = img;
+        if(Math.max(w,h) > maxSide){
+          const r = maxSide / Math.max(w,h);
+          w = Math.round(w*r); h = Math.round(h*r);
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+        try{ resolve(canvas.toDataURL('image/jpeg', quality)); }
+        catch(e){ resolve(dataUrl); }
+      };
+      img.onerror = ()=> resolve(dataUrl);
+      img.src = dataUrl;
+    });
+  }
+
   function handleImages(e){
     const files = Array.from(e.target.files||[]);
-    let remaining = files.length;
     files.forEach(file=>{
       const reader = new FileReader();
-      reader.onload = ()=>{ pendingImages.push(reader.result); renderImagePreview(); renderReport(); };
+      reader.onload = async ()=>{
+        const compressed = await compressImage(reader.result);
+        pendingImages.push(compressed);
+        renderImagePreview(); renderReport();
+      };
       reader.readAsDataURL(file);
     });
   }
