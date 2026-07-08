@@ -243,15 +243,24 @@ button{font-family:inherit;}
 .rp-summary div span.v{font-weight:600;color:var(--ink);}
 
 .rp-section{font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:var(--ink);
-  font-family:-apple-system,sans-serif;border-bottom:1px solid var(--ink);padding-bottom:3px;margin:16px 0 6px;}
+  font-family:-apple-system,sans-serif;border-bottom:1px solid var(--ink);padding-bottom:2px;margin:12px 0 4px;}
 
-table.rp-table{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:6px;}
-table.rp-table th{font-family:-apple-system,sans-serif;font-size:10px;text-transform:uppercase;letter-spacing:.02em;
-  color:var(--gray-2);text-align:left;font-weight:600;border-bottom:1px solid var(--ink);padding:4px 8px;}
+table.rp-table{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:4px;}
+table.rp-table th{font-family:-apple-system,sans-serif;font-size:9px;text-transform:uppercase;letter-spacing:.02em;
+  color:var(--gray-2);text-align:left;font-weight:600;border-bottom:1px solid var(--ink);padding:3px 6px;}
 table.rp-table th.num{text-align:right;}
-table.rp-table td{padding:5px 8px;border-bottom:1px solid var(--line);vertical-align:middle;}
+table.rp-table th.ref{text-align:right;width:34%;}
+table.rp-table td{padding:3px 6px;border-bottom:1px solid var(--line);vertical-align:middle;line-height:1.25;}
 table.rp-table td.num{text-align:right;font-family:'Georgia',serif;}
+table.rp-table td.ref{text-align:right;color:var(--gray-2);white-space:nowrap;font-family:-apple-system,sans-serif;font-size:10px;}
+table.rp-table td .u{color:var(--gray-2);font-size:.9em;}
 table.rp-table td.out{font-weight:700;}
+
+/* Dos columnas: pares de tablas cortas lado a lado para ahorrar páginas.
+   Cada .rp-pair es un bloque indivisible en la paginación del PDF (ver bSel). */
+.rp-pair{display:grid;grid-template-columns:1fr 1fr;gap:0 22px;align-items:start;margin-bottom:4px;}
+.rp-pair > div{min-width:0;}
+.rp-pair .rp-section{margin-top:0;}
 
 .rp-text{font-size:13px;line-height:1.6;white-space:pre-wrap;width:100%;font-family:'Georgia',serif;
   color:var(--ink);min-height:1.6em;}
@@ -297,7 +306,7 @@ table.rp-table td.out{font-weight:700;}
     padding:0 !important;min-height:0 !important;margin:0 auto;
   }
   /* nunca cortar una sección, fila de tabla, párrafo o bloque a la mitad entre dos hojas */
-  .rp-header, .rp-patient, .rp-summary, .rp-section, .rp-findings, .rp-text,
+  .rp-header, .rp-patient, .rp-summary, .rp-section, .rp-pair, .rp-findings, .rp-text,
   .rp-images, .rp-footer, table.rp-table, table.rp-table tr{
     page-break-inside: avoid;
     break-inside: avoid;
@@ -326,7 +335,7 @@ table.rp-table td.out{font-weight:700;}
     <div class="sidebar-foot">
       <button class="btn" id="btnNewPatient">+ Nuevo paciente</button>
       <div id="syncStatus" style="text-align:center;font-size:10px;color:var(--gray-3);margin-top:6px;">●  En línea</div>
-      <div style="text-align:center;font-size:10px;color:var(--gray-3);margin-top:2px;">build 2026-07-04-r41</div>
+      <div style="text-align:center;font-size:10px;color:var(--gray-3);margin-top:2px;">build 2026-07-08-r42</div>
     </div>
   </div>
   <div class="main" id="main"></div>
@@ -1766,7 +1775,7 @@ const PdfService = (()=>{
          ambos caen en el espacio en blanco entre filas, nunca sobre el texto. */
       /* .rp-footer excluido: así el footer fluye con las conclusiones y no se fuerza a página separada */
       const elTop=el.getBoundingClientRect().top;
-      const bSel='.rp-header,.rp-patient,.rp-summary,.rp-section,table.rp-table tr,.rp-findings,.rp-text,.rp-images';
+      const bSel='.rp-header,.rp-patient,.rp-summary,.rp-section,.rp-pair,table.rp-table:not(.paired) tr,.rp-findings,.rp-text,.rp-images';
       let breaks=[0];
       el.querySelectorAll(bSel).forEach(b=>{
         const r=b.getBoundingClientRect();
@@ -2735,12 +2744,41 @@ const App = (()=>{
     const grouped = {};
     rows.forEach(r=>{ (grouped[r.group]=grouped[r.group]||[]).push(r); });
 
-    const tablesHtml = Object.keys(grouped).length ? Object.keys(grouped).map(g=>`
+    /* Fusiona valor+unidad en una sola celda y estrecha el rango: las tablas ocupan
+       menos ancho y caben de a dos por fila. La columna UNIDAD desaparece. */
+    const sectionBlock = (g, paired)=>`
       <div class="rp-section">${g}</div>
-      <table class="rp-table">
-        <tr><th>Parámetro</th><th class="num">Valor</th><th>Unidad</th><th class="num">Rango normal</th></tr>
-        ${grouped[g].map(r=>`<tr><td>${r.label}</td><td class="num${r.out?' out':''}">${r.value}</td><td>${r.unit}</td><td class="num">${r.ref}</td></tr>`).join('')}
-      </table>`).join('') : '<p class="rp-empty">Sin mediciones ingresadas aún.</p>';
+      <table class="rp-table${paired?' paired':''}">
+        <tr><th>Parámetro</th><th class="num">Valor</th><th class="num ref">Rango normal</th></tr>
+        ${grouped[g].map(r=>{
+          const val = r.unit ? `${r.value} <span class="u">${r.unit}</span>` : r.value;
+          return `<tr><td>${r.label}</td><td class="num${r.out?' out':''}">${val}</td><td class="ref">${r.ref||'—'}</td></tr>`;
+        }).join('')}
+      </table>`;
+
+    /* Tablas largas → ancho completo (se parten por fila entre páginas).
+       Tablas cortas → emparejadas de a dos en un contenedor .rp-pair indivisible.
+       Una corta suelta (impar) vuelve a ancho completo para no quedar a media hoja. */
+    const LONG = 8; // filas
+    const gk = Object.keys(grouped);
+    let tablesHtml = '';
+    if(gk.length){
+      const q = [];
+      const flush = ()=>{
+        while(q.length >= 2){
+          const a = q.shift(), b = q.shift();
+          tablesHtml += `<div class="rp-pair"><div>${sectionBlock(a,true)}</div><div>${sectionBlock(b,true)}</div></div>`;
+        }
+        if(q.length === 1) tablesHtml += sectionBlock(q.shift(), false);
+      };
+      gk.forEach(g=>{
+        if(grouped[g].length > LONG){ flush(); tablesHtml += sectionBlock(g,false); }
+        else q.push(g);
+      });
+      flush();
+    } else {
+      tablesHtml = '<p class="rp-empty">Sin mediciones ingresadas aún.</p>';
+    }
 
     document.getElementById('paper').innerHTML = `
       <div class="rp-header">
