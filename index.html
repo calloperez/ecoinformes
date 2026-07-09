@@ -257,9 +257,12 @@ table.rp-table td .u{color:var(--gray-2);font-size:.9em;}
 table.rp-table td.out{font-weight:700;}
 
 /* Dos columnas: pares de tablas cortas lado a lado para ahorrar páginas.
-   Cada .rp-pair es un bloque indivisible en la paginación del PDF (ver bSel). */
-.rp-pair{display:grid;grid-template-columns:1fr 1fr;gap:0 22px;align-items:start;margin-bottom:4px;}
-.rp-pair > div{min-width:0;}
+   Se usa inline-block (NO grid): html2canvas rasteriza mal las grids que contienen
+   tablas y las superpone en el PDF. inline-block lo maneja de forma fiable.
+   font-size:0 en el contenedor elimina el espacio en blanco entre inline-blocks. */
+.rp-pair{margin-bottom:4px;font-size:0;}
+.rp-pair > div{display:inline-block;vertical-align:top;width:48%;font-size:11px;}
+.rp-pair > div:first-child{margin-right:3%;}
 .rp-pair .rp-section{margin-top:0;}
 
 .rp-text{font-size:13px;line-height:1.6;white-space:pre-wrap;width:100%;font-family:'Georgia',serif;
@@ -335,7 +338,7 @@ table.rp-table td.out{font-weight:700;}
     <div class="sidebar-foot">
       <button class="btn" id="btnNewPatient">+ Nuevo paciente</button>
       <div id="syncStatus" style="text-align:center;font-size:10px;color:var(--gray-3);margin-top:6px;">●  En línea</div>
-      <div style="text-align:center;font-size:10px;color:var(--gray-3);margin-top:2px;">build 2026-07-08-r42</div>
+      <div style="text-align:center;font-size:10px;color:var(--gray-3);margin-top:2px;">build 2026-07-08-r43</div>
     </div>
   </div>
   <div class="main" id="main"></div>
