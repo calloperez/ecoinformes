@@ -343,7 +343,7 @@ table.rp-duo td.sep, table.rp-duo th.sep{border-left:1px solid var(--line);paddi
     <div class="sidebar-foot">
       <button class="btn" id="btnNewPatient">+ Nuevo paciente</button>
       <div id="syncStatus" style="text-align:center;font-size:10px;color:var(--gray-3);margin-top:6px;">●  En línea</div>
-      <div style="text-align:center;font-size:10px;color:var(--gray-3);margin-top:2px;">build 2026-07-08-r50</div>
+      <div style="text-align:center;font-size:10px;color:var(--gray-3);margin-top:2px;">build 2026-07-08-r51</div>
     </div>
   </div>
   <div class="main" id="main"></div>
@@ -1784,7 +1784,10 @@ const PdfService = (()=>{
          ambos caen en el espacio en blanco entre filas, nunca sobre el texto. */
       /* .rp-footer excluido: así el footer fluye con las conclusiones y no se fuerza a página separada */
       const elTop=el.getBoundingClientRect().top;
-      const bSel='.rp-header,.rp-patient,.rp-summary,.rp-section,table.rp-duo,table.rp-table:not(.paired) tr,.rp-findings,.rp-text,.rp-images';
+      /* Duos ya NO son atómicos: al ser tablas planas, cortar entre sus filas es limpio
+         (ambas columnas cortan en el mismo <tr>). Se incluyen sus filas como puntos de
+         corte con table.rp-table tr, evitando el corte forzado a mitad de tabla. */
+      const bSel='.rp-header,.rp-patient,.rp-summary,.rp-section,table.rp-table tr,.rp-findings,.rp-text,.rp-images';
       let breaks=[0];
       el.querySelectorAll(bSel).forEach(b=>{
         const r=b.getBoundingClientRect();
@@ -1812,8 +1815,15 @@ const PdfService = (()=>{
 
       const {jsPDF}=window.jspdf;
       const pdf=new jsPDF('p','mm','a4');
-      const mMM=8, pW=210-mMM*2, pH=297-mMM*2;
-      const pxMM=canvas.width/pW, pageH=Math.floor(pH*pxMM);
+      /* Márgenes: laterales finos (mmX) por pedido; verticales (mmY) con algo más de aire. */
+      const mmX=8, mmY=10, pW=210-mmX*2, pH=297-mmY*2;
+      const pxMM=canvas.width/pW;
+      /* Colchón de seguridad: cada hoja corta ~2.5mm ANTES del borde útil real. Absorbe
+         la diferencia entre las posiciones medidas en el DOM y cómo html2canvas rasteriza
+         el texto, de modo que el corte caiga siempre en el blanco entre filas y nunca a
+         mitad de una fila. */
+      const safety=Math.round(2.5*pxMM);
+      const pageH=Math.max(1, Math.floor(pH*pxMM)-safety);
 
       let cursor=0, first=true;
       while(cursor<canvas.height-1){
@@ -1826,7 +1836,7 @@ const PdfService = (()=>{
         sc.width=canvas.width; sc.height=h;
         sc.getContext('2d').drawImage(canvas,0,cursor,canvas.width,h,0,0,canvas.width,h);
         if(!first) pdf.addPage();
-        pdf.addImage(sc.toDataURL('image/jpeg',0.94),'JPEG',mMM,mMM,pW,Math.min(h/pxMM,pH));
+        pdf.addImage(sc.toDataURL('image/jpeg',0.94),'JPEG',mmX,mmY,pW,Math.min(h/pxMM,pH));
         cursor=chosen; first=false;
       }
 
