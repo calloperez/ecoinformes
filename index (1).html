@@ -343,7 +343,7 @@ table.rp-duo td.sep, table.rp-duo th.sep{border-left:1px solid var(--line);paddi
     <div class="sidebar-foot">
       <button class="btn" id="btnNewPatient">+ Nuevo paciente</button>
       <div id="syncStatus" style="text-align:center;font-size:10px;color:var(--gray-3);margin-top:6px;">●  En línea</div>
-      <div style="text-align:center;font-size:10px;color:var(--gray-3);margin-top:2px;">build 2026-07-08-r52</div>
+      <div style="text-align:center;font-size:10px;color:var(--gray-3);margin-top:2px;">build 2026-07-08-r53</div>
     </div>
   </div>
   <div class="main" id="main"></div>
@@ -1839,12 +1839,45 @@ const PdfService = (()=>{
       const safety=Math.round(2.5*pxMM);
       const pageH=Math.max(1, Math.floor(pH*pxMM)-safety);
 
+      /* Ajuste por píxeles: html2canvas dibuja el texto en posiciones ligeramente
+         distintas de las medidas en el DOM, y ese desfasaje crece hacia abajo, así que
+         un corte "limpio" según las mediciones puede caer sobre las letras. Antes de
+         cortar, se sube el corte hasta el primer renglón del CANVAS que no cruza ninguna
+         letra (blanco o una línea divisoria fina). Un píxel se considera "de texto" si
+         es oscuro en los 3 canales; las líneas de tabla (gris claro) y el separador
+         vertical de los duos NO cuentan, así que sí se puede cortar sobre ellos. Si el
+         canvas está "tainted" (getImageData falla), se desactiva y se usa solo el colchón. */
+      const cctx=canvas.getContext('2d');
+      let canSnap=true;
+      const isGapRow=(y)=>{
+        if(!canSnap||y<1||y>=canvas.height) return false;
+        let d;
+        try{ d=cctx.getImageData(0,y,canvas.width,1).data; }
+        catch(e){ canSnap=false; return false; }
+        let dark=0;
+        for(let i=0;i<d.length;i+=16){ // muestrea 1 de cada 4 px por velocidad
+          if(d[i]<140&&d[i+1]<140&&d[i+2]<140){ if(++dark>2) return false; }
+        }
+        return true;
+      };
+      const snapUp=(y)=>{
+        const yr=Math.min(canvas.height-1,Math.round(y));
+        if(!canSnap) return yr;
+        const lim=Math.max(1, yr-Math.round(6*pxMM)); // hasta ~6mm hacia arriba
+        for(let yy=yr; yy>=lim; yy--){ if(isGapRow(yy)) return yy; }
+        return yr;
+      };
+
       let cursor=0, first=true;
       while(cursor<canvas.height-1){
         const target=Math.min(cursor+pageH,canvas.height);
         let chosen=null;
         breaks.forEach(b=>{ if(b>cursor&&b<=target) chosen=b; });
         if(chosen===null||chosen<=cursor) chosen=target;
+        /* Sube el corte a un renglón sin texto del canvas; si eso no avanza
+           (toda la franja es texto), se mantiene el corte original. */
+        const snapped=snapUp(chosen);
+        if(snapped>cursor) chosen=snapped;
         const h=chosen-cursor;
         const sc=document.createElement('canvas');
         sc.width=canvas.width; sc.height=h;
