@@ -229,17 +229,17 @@ button{font-family:inherit;}
   font-family:-apple-system,sans-serif;font-size:10px;color:var(--gray-2);overflow:hidden;}
 .rp-logo img{width:100%;height:100%;object-fit:cover;}
 .rp-date{text-align:right;font-size:11px;color:var(--gray-2);font-family:-apple-system,sans-serif;}
-.rp-title{text-align:center;font-size:12.5px;letter-spacing:.1em;text-transform:uppercase;font-weight:600;
-  font-family:-apple-system,sans-serif;margin:4px 0 20px;}
+.rp-title{text-align:center;font-size:12px;letter-spacing:.09em;text-transform:uppercase;font-weight:600;
+  font-family:-apple-system,sans-serif;margin:2px 0 12px;}
 
-.rp-patient{display:grid;grid-template-columns:1fr 1fr;gap:2px 24px;font-size:11.5px;font-family:-apple-system,sans-serif;
-  margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--line);}
+.rp-patient{display:grid;grid-template-columns:1fr 1fr;gap:1px 20px;font-size:10px;font-family:-apple-system,sans-serif;
+  margin-bottom:8px;padding-bottom:7px;border-bottom:1px solid var(--line);}
 .rp-patient span.l{color:var(--gray-2);}
 .rp-patient span.v{font-weight:600;}
 
-.rp-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:6px 18px;font-size:10.5px;font-family:-apple-system,sans-serif;
-  margin-bottom:12px;color:var(--gray-1);}
-.rp-summary div span.l{display:block;color:var(--gray-2);font-size:9px;text-transform:uppercase;letter-spacing:.03em;}
+.rp-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:4px 14px;font-size:9.5px;font-family:-apple-system,sans-serif;
+  margin-bottom:8px;color:var(--gray-1);}
+.rp-summary div span.l{display:block;color:var(--gray-2);font-size:8px;text-transform:uppercase;letter-spacing:.03em;}
 .rp-summary div span.v{font-weight:600;color:var(--ink);}
 
 .rp-section{font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;font-weight:700;color:var(--ink);
@@ -266,7 +266,7 @@ table.rp-duo .rp-duo-title th{font-size:10px;letter-spacing:.05em;text-transform
   color:var(--ink);border-bottom:1px solid var(--ink);padding:2px 5px;text-align:left;}
 table.rp-duo td.sep, table.rp-duo th.sep{border-left:1px solid var(--line);padding-left:12px;}
 
-.rp-text{font-size:13px;line-height:1.6;white-space:pre-wrap;width:100%;font-family:'Georgia',serif;
+.rp-text{font-size:12px;line-height:1.45;white-space:pre-wrap;width:100%;font-family:'Georgia',serif;
   color:var(--ink);min-height:1.6em;}
 .rp-text:focus{outline:1px dashed var(--gray-3);}
 
@@ -343,7 +343,7 @@ table.rp-duo td.sep, table.rp-duo th.sep{border-left:1px solid var(--line);paddi
     <div class="sidebar-foot">
       <button class="btn" id="btnNewPatient">+ Nuevo paciente</button>
       <div id="syncStatus" style="text-align:center;font-size:10px;color:var(--gray-3);margin-top:6px;">●  En línea</div>
-      <div style="text-align:center;font-size:10px;color:var(--gray-3);margin-top:2px;">build 2026-07-08-r48</div>
+      <div style="text-align:center;font-size:10px;color:var(--gray-3);margin-top:2px;">build 2026-07-08-r50</div>
     </div>
   </div>
   <div class="main" id="main"></div>
@@ -1764,7 +1764,7 @@ const PdfService = (()=>{
          página (menos hojas) y el contenido es más ancho (menos envuelto). Reducir el
          padding, en cambio, achica el scrollWidth y AGRANDA todo (más hojas), así que
          el margen se controla acá con un valor moderado. */
-      el.style.padding='32px 64px 40px 64px';
+      el.style.padding='32px 40px 40px 40px';
       await new Promise(r=>setTimeout(r,50));
 
       const isSafari=/^((?!chrome|android).)*safari/i.test(navigator.userAgent);
@@ -1812,7 +1812,7 @@ const PdfService = (()=>{
 
       const {jsPDF}=window.jspdf;
       const pdf=new jsPDF('p','mm','a4');
-      const mMM=12, pW=210-mMM*2, pH=297-mMM*2;
+      const mMM=8, pW=210-mMM*2, pH=297-mMM*2;
       const pxMM=canvas.width/pW, pageH=Math.floor(pH*pxMM);
 
       let cursor=0, first=true;
