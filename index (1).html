@@ -343,7 +343,7 @@ table.rp-duo td.sep, table.rp-duo th.sep{border-left:1px solid var(--line);paddi
     <div class="sidebar-foot">
       <button class="btn" id="btnNewPatient">+ Nuevo paciente</button>
       <div id="syncStatus" style="text-align:center;font-size:10px;color:var(--gray-3);margin-top:6px;">●  En línea</div>
-      <div style="text-align:center;font-size:10px;color:var(--gray-3);margin-top:2px;">build 2026-07-08-r51</div>
+      <div style="text-align:center;font-size:10px;color:var(--gray-3);margin-top:2px;">build 2026-07-08-r52</div>
     </div>
   </div>
   <div class="main" id="main"></div>
@@ -1806,6 +1806,20 @@ const PdfService = (()=>{
         }
       });
       breaks.push(canvas.height);
+
+      /* Anti-huérfano: evita que un título de sección quede solo al pie de una hoja,
+         separado de su contenido. Se elimina cualquier corte que caiga justo DEBAJO
+         del título (desde su borde superior hasta ~2 alturas de título más abajo), de
+         modo que el título siempre baje junto con su primera fila/renglón. El corte
+         ANTES del título (en su borde superior) se conserva, para poder empujar la
+         sección entera a la hoja siguiente. */
+      const guards=[];
+      el.querySelectorAll('.rp-section').forEach(s=>{
+        const r=s.getBoundingClientRect();
+        const top=(r.top-elTop)*scale, bot=(r.bottom-elTop)*scale;
+        guards.push([top, bot + 2.4*(bot-top)]);
+      });
+      breaks=breaks.filter(b=> b===0 || b===canvas.height || !guards.some(g=> b>g[0] && b<g[1]));
 
       el.style.cssText=prevStyle;
       if(sp) sp.scrollTop=prevScroll;
