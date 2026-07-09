@@ -232,28 +232,29 @@ button{font-family:inherit;}
 .rp-title{text-align:center;font-size:12.5px;letter-spacing:.1em;text-transform:uppercase;font-weight:600;
   font-family:-apple-system,sans-serif;margin:4px 0 20px;}
 
-.rp-patient{display:grid;grid-template-columns:1fr 1fr;gap:3px 24px;font-size:12.5px;font-family:-apple-system,sans-serif;
-  margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid var(--line);}
+.rp-patient{display:grid;grid-template-columns:1fr 1fr;gap:2px 24px;font-size:11.5px;font-family:-apple-system,sans-serif;
+  margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--line);}
 .rp-patient span.l{color:var(--gray-2);}
 .rp-patient span.v{font-weight:600;}
 
-.rp-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px 18px;font-size:11.5px;font-family:-apple-system,sans-serif;
-  margin-bottom:20px;color:var(--gray-1);}
-.rp-summary div span.l{display:block;color:var(--gray-2);font-size:10px;text-transform:uppercase;letter-spacing:.03em;}
+.rp-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:6px 18px;font-size:10.5px;font-family:-apple-system,sans-serif;
+  margin-bottom:12px;color:var(--gray-1);}
+.rp-summary div span.l{display:block;color:var(--gray-2);font-size:9px;text-transform:uppercase;letter-spacing:.03em;}
 .rp-summary div span.v{font-weight:600;color:var(--ink);}
 
-.rp-section{font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:var(--ink);
-  font-family:-apple-system,sans-serif;border-bottom:1px solid var(--ink);padding-bottom:2px;margin:12px 0 4px;}
+.rp-section{font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;font-weight:700;color:var(--ink);
+  font-family:-apple-system,sans-serif;border-bottom:1px solid var(--ink);padding-bottom:2px;margin:10px 0 3px;}
 
-table.rp-table{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:4px;}
-table.rp-table th{font-family:-apple-system,sans-serif;font-size:9px;text-transform:uppercase;letter-spacing:.02em;
-  color:var(--gray-2);text-align:left;font-weight:600;border-bottom:1px solid var(--ink);padding:3px 6px;}
+table.rp-table{width:100%;border-collapse:collapse;font-size:9.5px;margin-bottom:3px;}
+table.rp-table th{font-family:-apple-system,sans-serif;font-size:8px;text-transform:uppercase;letter-spacing:.01em;
+  color:var(--gray-2);text-align:left;font-weight:600;border-bottom:1px solid var(--ink);padding:2px 5px;}
 table.rp-table th.num{text-align:right;}
 table.rp-table th.ref{text-align:right;width:34%;}
-table.rp-table td{padding:3px 6px;border-bottom:1px solid var(--line);vertical-align:middle;line-height:1.25;}
+table.rp-table td{padding:2px 5px;border-bottom:1px solid var(--line);vertical-align:middle;line-height:1.2;}
 table.rp-table td.num{text-align:right;font-family:'Georgia',serif;}
-table.rp-table td.ref{text-align:right;color:var(--gray-2);white-space:nowrap;font-family:-apple-system,sans-serif;font-size:10px;}
-table.rp-table td .u{color:var(--gray-2);font-size:.9em;}
+table.rp-table td.ref{text-align:right;color:var(--gray-2);white-space:nowrap;font-family:-apple-system,sans-serif;font-size:8.5px;}
+table.rp-table td .u{color:var(--gray-2);font-size:.88em;}
+table.rp-table td .nw{white-space:nowrap;}
 table.rp-table td.out{font-weight:700;}
 
 /* Dos columnas a prueba de html2canvas: dos secciones cortas se fusionan en UNA
@@ -261,9 +262,9 @@ table.rp-table td.out{font-weight:700;}
    inline-block y tablas anidadas se le superponen en el PDF. table-layout:fixed
    mantiene el ancho de columnas estable y hace que las etiquetas largas envuelvan. */
 table.rp-duo{table-layout:fixed;}
-table.rp-duo .rp-duo-title th{font-size:11px;letter-spacing:.06em;text-transform:uppercase;font-weight:700;
-  color:var(--ink);border-bottom:1px solid var(--ink);padding:2px 6px;text-align:left;}
-table.rp-duo td.sep, table.rp-duo th.sep{border-left:1px solid var(--line);padding-left:14px;}
+table.rp-duo .rp-duo-title th{font-size:10px;letter-spacing:.05em;text-transform:uppercase;font-weight:700;
+  color:var(--ink);border-bottom:1px solid var(--ink);padding:2px 5px;text-align:left;}
+table.rp-duo td.sep, table.rp-duo th.sep{border-left:1px solid var(--line);padding-left:12px;}
 
 .rp-text{font-size:13px;line-height:1.6;white-space:pre-wrap;width:100%;font-family:'Georgia',serif;
   color:var(--ink);min-height:1.6em;}
@@ -342,7 +343,7 @@ table.rp-duo td.sep, table.rp-duo th.sep{border-left:1px solid var(--line);paddi
     <div class="sidebar-foot">
       <button class="btn" id="btnNewPatient">+ Nuevo paciente</button>
       <div id="syncStatus" style="text-align:center;font-size:10px;color:var(--gray-3);margin-top:6px;">●  En línea</div>
-      <div style="text-align:center;font-size:10px;color:var(--gray-3);margin-top:2px;">build 2026-07-08-r47</div>
+      <div style="text-align:center;font-size:10px;color:var(--gray-3);margin-top:2px;">build 2026-07-08-r48</div>
     </div>
   </div>
   <div class="main" id="main"></div>
@@ -1763,7 +1764,7 @@ const PdfService = (()=>{
          página (menos hojas) y el contenido es más ancho (menos envuelto). Reducir el
          padding, en cambio, achica el scrollWidth y AGRANDA todo (más hojas), así que
          el margen se controla acá con un valor moderado. */
-      el.style.padding='48px 64px 62px 64px';
+      el.style.padding='32px 64px 40px 64px';
       await new Promise(r=>setTimeout(r,50));
 
       const isSafari=/^((?!chrome|android).)*safari/i.test(navigator.userAgent);
@@ -2752,16 +2753,19 @@ const App = (()=>{
     const grouped = {};
     rows.forEach(r=>{ (grouped[r.group]=grouped[r.group]||[]).push(r); });
 
-    /* Fusiona valor+unidad en una sola celda y estrecha el rango. La columna UNIDAD
-       desaparece. Usada para las tablas full-width (una sección por tabla). */
+    /* Valor+unidad en una celda. Los numéricos se envuelven en .nw (nowrap) para que
+       "1.01 m/s" no se apile ni se pise con la etiqueta; los valores de texto largo
+       (sin unidad, p.ej. "Sin trastorno...") sí pueden envolver normalmente. */
+    const fmtVal = (r)=> r.unit
+      ? `<span class="nw">${r.value} <span class="u">${r.unit}</span></span>`
+      : `${r.value}`;
+
+    /* Tabla full-width (una sección por tabla). */
     const sectionBlock = (g)=>`
       <div class="rp-section">${g}</div>
       <table class="rp-table">
         <tr><th>Parámetro</th><th class="num">Valor</th><th class="num ref">Rango normal</th></tr>
-        ${grouped[g].map(r=>{
-          const val = r.unit ? `${r.value} <span class="u">${r.unit}</span>` : r.value;
-          return `<tr><td>${r.label}</td><td class="num${r.out?' out':''}">${val}</td><td class="ref">${r.ref||'—'}</td></tr>`;
-        }).join('')}
+        ${grouped[g].map(r=>`<tr><td>${r.label}</td><td class="num${r.out?' out':''}">${fmtVal(r)}</td><td class="ref">${r.ref||'—'}</td></tr>`).join('')}
       </table>`;
 
     /* Dos secciones cortas → UNA sola tabla plana de 6 columnas (no tablas anidadas:
@@ -2770,18 +2774,19 @@ const App = (()=>{
     const cells = (r, sep)=>{
       const c0 = sep ? ' class="sep"' : '';
       if(!r) return `<td${c0}></td><td class="num"></td><td class="ref"></td>`;
-      const val = r.unit ? `${r.value} <span class="u">${r.unit}</span>` : r.value;
-      return `<td${c0}>${r.label}</td><td class="num${r.out?' out':''}">${val}</td><td class="ref">${r.ref||'—'}</td>`;
+      return `<td${c0}>${r.label}</td><td class="num${r.out?' out':''}">${fmtVal(r)}</td><td class="ref">${r.ref||'—'}</td>`;
     };
     const duoTable = (a, b)=>{
       const ra = grouped[a], rb = grouped[b], n = Math.max(ra.length, rb.length);
       let body = '';
       for(let i=0;i<n;i++) body += `<tr>${cells(ra[i],false)}${cells(rb[i],true)}</tr>`;
+      /* Anchos que suman EXACTO 100% (24+13+13 por lado): con table-layout:fixed evita
+         la redistribución que hacía que html2canvas pisara columnas. */
       return `<table class="rp-table paired rp-duo">
         <tr class="rp-duo-title"><th colspan="3">${a}</th><th colspan="3" class="sep">${b}</th></tr>
         <tr>
-          <th style="width:22%">Parámetro</th><th class="num" style="width:9%">Valor</th><th class="num ref" style="width:9%">Rango</th>
-          <th class="sep" style="width:22%">Parámetro</th><th class="num" style="width:9%">Valor</th><th class="num ref" style="width:9%">Rango</th>
+          <th style="width:24%">Parámetro</th><th class="num" style="width:13%">Valor</th><th class="num ref" style="width:13%">Rango</th>
+          <th class="sep" style="width:24%">Parámetro</th><th class="num" style="width:13%">Valor</th><th class="num ref" style="width:13%">Rango</th>
         </tr>
         ${body}
       </table>`;
@@ -2844,7 +2849,7 @@ const App = (()=>{
       <div class="rp-text" id="descText" contenteditable="true">${escapeHtml(desc)}</div>
       <div class="rp-section">Conclusiones</div>
       <div class="rp-text" id="conclText" contenteditable="true">${escapeHtml(concl)}</div>
-      ${pendingImages.length ? `<div class="rp-section">Imágenes</div><div class="rp-images">${pendingImages.map(src=>`<img src="${src}">`).join('')}</div>` : ''}
+      ${pendingImages.length ? `<div class="rp-section">Imágenes</div><div class="rp-images">${pendingImages.map(src=>`<img src="${src}" width="132" height="99" style="width:132px;height:99px;object-fit:cover;">`).join('')}</div>` : ''}
       <div class="rp-footer">
         <div>Informe generado electrónicamente</div>
         <div class="rp-sign">
@@ -2959,6 +2964,7 @@ self.addEventListener('fetch', e=>{
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function(){
     navigator.serviceWorker.register('sw.js').then(function(reg){
+      try{ reg.update(); }catch(e){}
       /* Si aparece un SW nuevo, se activa de inmediato (skipWaiting en sw.js) */
       reg.addEventListener('updatefound', function(){
         var nw = reg.installing;
