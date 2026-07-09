@@ -256,14 +256,15 @@ table.rp-table td.ref{text-align:right;color:var(--gray-2);white-space:nowrap;fo
 table.rp-table td .u{color:var(--gray-2);font-size:.9em;}
 table.rp-table td.out{font-weight:700;}
 
-/* Dos columnas: pares de tablas cortas lado a lado para ahorrar páginas.
-   Se usa inline-block (NO grid): html2canvas rasteriza mal las grids que contienen
-   tablas y las superpone en el PDF. inline-block lo maneja de forma fiable.
-   font-size:0 en el contenedor elimina el espacio en blanco entre inline-blocks. */
-.rp-pair{margin-bottom:4px;font-size:0;}
-.rp-pair > div{display:inline-block;vertical-align:top;width:48%;font-size:11px;}
-.rp-pair > div:first-child{margin-right:3%;}
-.rp-pair .rp-section{margin-top:0;}
+/* Dos columnas robustas para el PDF: html2canvas rasteriza mal grid e inline-block
+   cuando las celdas contienen tablas anidadas (las superpone al exportar). Un <table>
+   con table-layout:fixed SÍ se exporta de forma fiable — es la técnica estándar con
+   html2canvas, y las tablas full-width ya demuestran que las rasteriza bien. */
+table.rp-pair{width:100%;table-layout:fixed;border-collapse:separate;border-spacing:0;margin-bottom:4px;}
+table.rp-pair > tbody > tr > td{width:50%;vertical-align:top;padding:0;border:none;}
+table.rp-pair > tbody > tr > td:first-child{padding-right:11px;}
+table.rp-pair > tbody > tr > td:last-child{padding-left:11px;}
+table.rp-pair .rp-section{margin-top:0;}
 
 .rp-text{font-size:13px;line-height:1.6;white-space:pre-wrap;width:100%;font-family:'Georgia',serif;
   color:var(--ink);min-height:1.6em;}
@@ -338,7 +339,7 @@ table.rp-table td.out{font-weight:700;}
     <div class="sidebar-foot">
       <button class="btn" id="btnNewPatient">+ Nuevo paciente</button>
       <div id="syncStatus" style="text-align:center;font-size:10px;color:var(--gray-3);margin-top:6px;">●  En línea</div>
-      <div style="text-align:center;font-size:10px;color:var(--gray-3);margin-top:2px;">build 2026-07-08-r43</div>
+      <div style="text-align:center;font-size:10px;color:var(--gray-3);margin-top:2px;">build 2026-07-08-r44</div>
     </div>
   </div>
   <div class="main" id="main"></div>
@@ -2770,7 +2771,7 @@ const App = (()=>{
       const flush = ()=>{
         while(q.length >= 2){
           const a = q.shift(), b = q.shift();
-          tablesHtml += `<div class="rp-pair"><div>${sectionBlock(a,true)}</div><div>${sectionBlock(b,true)}</div></div>`;
+          tablesHtml += `<table class="rp-pair"><tbody><tr><td>${sectionBlock(a,true)}</td><td>${sectionBlock(b,true)}</td></tr></tbody></table>`;
         }
         if(q.length === 1) tablesHtml += sectionBlock(q.shift(), false);
       };
