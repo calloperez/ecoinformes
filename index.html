@@ -256,15 +256,14 @@ table.rp-table td.ref{text-align:right;color:var(--gray-2);white-space:nowrap;fo
 table.rp-table td .u{color:var(--gray-2);font-size:.9em;}
 table.rp-table td.out{font-weight:700;}
 
-/* Dos columnas robustas para el PDF: html2canvas rasteriza mal grid e inline-block
-   cuando las celdas contienen tablas anidadas (las superpone al exportar). Un <table>
-   con table-layout:fixed SÍ se exporta de forma fiable — es la técnica estándar con
-   html2canvas, y las tablas full-width ya demuestran que las rasteriza bien. */
-table.rp-pair{width:100%;table-layout:fixed;border-collapse:separate;border-spacing:0;margin-bottom:4px;}
-table.rp-pair > tbody > tr > td{width:50%;vertical-align:top;padding:0;border:none;}
-table.rp-pair > tbody > tr > td:first-child{padding-right:11px;}
-table.rp-pair > tbody > tr > td:last-child{padding-left:11px;}
-table.rp-pair .rp-section{margin-top:0;}
+/* Dos columnas a prueba de html2canvas: dos secciones cortas se fusionan en UNA
+   tabla plana de 6 columnas. html2canvas rasteriza tablas planas perfecto; grid,
+   inline-block y tablas anidadas se le superponen en el PDF. table-layout:fixed
+   mantiene el ancho de columnas estable y hace que las etiquetas largas envuelvan. */
+table.rp-duo{table-layout:fixed;}
+table.rp-duo .rp-duo-title th{font-size:11px;letter-spacing:.06em;text-transform:uppercase;font-weight:700;
+  color:var(--ink);border-bottom:1px solid var(--ink);padding:2px 6px;text-align:left;}
+table.rp-duo td.sep, table.rp-duo th.sep{border-left:1px solid var(--line);padding-left:14px;}
 
 .rp-text{font-size:13px;line-height:1.6;white-space:pre-wrap;width:100%;font-family:'Georgia',serif;
   color:var(--ink);min-height:1.6em;}
@@ -310,7 +309,7 @@ table.rp-pair .rp-section{margin-top:0;}
     padding:0 !important;min-height:0 !important;margin:0 auto;
   }
   /* nunca cortar una sección, fila de tabla, párrafo o bloque a la mitad entre dos hojas */
-  .rp-header, .rp-patient, .rp-summary, .rp-section, .rp-pair, .rp-findings, .rp-text,
+  .rp-header, .rp-patient, .rp-summary, .rp-section, table.rp-duo, .rp-findings, .rp-text,
   .rp-images, .rp-footer, table.rp-table, table.rp-table tr{
     page-break-inside: avoid;
     break-inside: avoid;
@@ -339,7 +338,7 @@ table.rp-pair .rp-section{margin-top:0;}
     <div class="sidebar-foot">
       <button class="btn" id="btnNewPatient">+ Nuevo paciente</button>
       <div id="syncStatus" style="text-align:center;font-size:10px;color:var(--gray-3);margin-top:6px;">●  En línea</div>
-      <div style="text-align:center;font-size:10px;color:var(--gray-3);margin-top:2px;">build 2026-07-08-r44</div>
+      <div style="text-align:center;font-size:10px;color:var(--gray-3);margin-top:2px;">build 2026-07-08-r45</div>
     </div>
   </div>
   <div class="main" id="main"></div>
@@ -1779,7 +1778,7 @@ const PdfService = (()=>{
          ambos caen en el espacio en blanco entre filas, nunca sobre el texto. */
       /* .rp-footer excluido: así el footer fluye con las conclusiones y no se fuerza a página separada */
       const elTop=el.getBoundingClientRect().top;
-      const bSel='.rp-header,.rp-patient,.rp-summary,.rp-section,.rp-pair,table.rp-table:not(.paired) tr,.rp-findings,.rp-text,.rp-images';
+      const bSel='.rp-header,.rp-patient,.rp-summary,.rp-section,table.rp-duo,table.rp-table:not(.paired) tr,.rp-findings,.rp-text,.rp-images';
       let breaks=[0];
       el.querySelectorAll(bSel).forEach(b=>{
         const r=b.getBoundingClientRect();
@@ -2748,11 +2747,11 @@ const App = (()=>{
     const grouped = {};
     rows.forEach(r=>{ (grouped[r.group]=grouped[r.group]||[]).push(r); });
 
-    /* Fusiona valor+unidad en una sola celda y estrecha el rango: las tablas ocupan
-       menos ancho y caben de a dos por fila. La columna UNIDAD desaparece. */
-    const sectionBlock = (g, paired)=>`
+    /* Fusiona valor+unidad en una sola celda y estrecha el rango. La columna UNIDAD
+       desaparece. Usada para las tablas full-width (una sección por tabla). */
+    const sectionBlock = (g)=>`
       <div class="rp-section">${g}</div>
-      <table class="rp-table${paired?' paired':''}">
+      <table class="rp-table">
         <tr><th>Parámetro</th><th class="num">Valor</th><th class="num ref">Rango normal</th></tr>
         ${grouped[g].map(r=>{
           const val = r.unit ? `${r.value} <span class="u">${r.unit}</span>` : r.value;
@@ -2760,23 +2759,43 @@ const App = (()=>{
         }).join('')}
       </table>`;
 
+    /* Dos secciones cortas → UNA sola tabla plana de 6 columnas (no tablas anidadas:
+       html2canvas las superpone). Los títulos van en una fila con colspan. Las filas
+       de ambas secciones se intercalan; si una es más corta, quedan celdas vacías. */
+    const cells = (r, sep)=>{
+      const c0 = sep ? ' class="sep"' : '';
+      if(!r) return `<td${c0}></td><td class="num"></td><td class="ref"></td>`;
+      const val = r.unit ? `${r.value} <span class="u">${r.unit}</span>` : r.value;
+      return `<td${c0}>${r.label}</td><td class="num${r.out?' out':''}">${val}</td><td class="ref">${r.ref||'—'}</td>`;
+    };
+    const duoTable = (a, b)=>{
+      const ra = grouped[a], rb = grouped[b], n = Math.max(ra.length, rb.length);
+      let body = '';
+      for(let i=0;i<n;i++) body += `<tr>${cells(ra[i],false)}${cells(rb[i],true)}</tr>`;
+      return `<table class="rp-table paired rp-duo">
+        <tr class="rp-duo-title"><th colspan="3">${a}</th><th colspan="3" class="sep">${b}</th></tr>
+        <tr>
+          <th style="width:22%">Parámetro</th><th class="num" style="width:9%">Valor</th><th class="num ref" style="width:9%">Rango</th>
+          <th class="sep" style="width:22%">Parámetro</th><th class="num" style="width:9%">Valor</th><th class="num ref" style="width:9%">Rango</th>
+        </tr>
+        ${body}
+      </table>`;
+    };
+
     /* Tablas largas → ancho completo (se parten por fila entre páginas).
-       Tablas cortas → emparejadas de a dos en un contenedor .rp-pair indivisible.
-       Una corta suelta (impar) vuelve a ancho completo para no quedar a media hoja. */
+       Tablas cortas → de a dos en un duoTable indivisible (ver bSel: table.rp-duo).
+       Una corta suelta (impar) vuelve a ancho completo. */
     const LONG = 8; // filas
     const gk = Object.keys(grouped);
     let tablesHtml = '';
     if(gk.length){
       const q = [];
       const flush = ()=>{
-        while(q.length >= 2){
-          const a = q.shift(), b = q.shift();
-          tablesHtml += `<table class="rp-pair"><tbody><tr><td>${sectionBlock(a,true)}</td><td>${sectionBlock(b,true)}</td></tr></tbody></table>`;
-        }
-        if(q.length === 1) tablesHtml += sectionBlock(q.shift(), false);
+        while(q.length >= 2){ const a = q.shift(), b = q.shift(); tablesHtml += duoTable(a, b); }
+        if(q.length === 1) tablesHtml += sectionBlock(q.shift());
       };
       gk.forEach(g=>{
-        if(grouped[g].length > LONG){ flush(); tablesHtml += sectionBlock(g,false); }
+        if(grouped[g].length > LONG){ flush(); tablesHtml += sectionBlock(g); }
         else q.push(g);
       });
       flush();
