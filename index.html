@@ -338,7 +338,7 @@ table.rp-duo td.sep, table.rp-duo th.sep{border-left:1px solid var(--line);paddi
     <div class="sidebar-foot">
       <button class="btn" id="btnNewPatient">+ Nuevo paciente</button>
       <div id="syncStatus" style="text-align:center;font-size:10px;color:var(--gray-3);margin-top:6px;">●  En línea</div>
-      <div style="text-align:center;font-size:10px;color:var(--gray-3);margin-top:2px;">build 2026-07-08-r45</div>
+      <div style="text-align:center;font-size:10px;color:var(--gray-3);margin-top:2px;">build 2026-07-08-r46</div>
     </div>
   </div>
   <div class="main" id="main"></div>
@@ -1754,11 +1754,12 @@ const PdfService = (()=>{
       const CW={S:1080,M:900,L:740};
       const sz=localStorage.getItem('eco_font_size')||'M';
       el.style.width=(CW[sz]||900)+'px';
-      /* Márgenes formales: laterales amplios y aire superior. El padding va DENTRO
-         del canvas que se mapea al ancho útil A4, así que define el margen visual del
-         PDF. Al haber más padding lateral, el contenido se angosta (box-sizing:border-box)
-         pero los cortes de página se miden sobre este mismo layout, así que no se rompen. */
-      el.style.padding='48px 100px 62px 100px';
+      /* Márgenes laterales reducidos (60px, antes 100px): más ancho de contenido →
+         las etiquetas de los duos envuelven menos y las filas se acortan → se gana
+         espacio vertical. El padding va DENTRO del canvas mapeado al ancho útil A4,
+         así que define el margen visual del PDF; los cortes de página se miden sobre
+         este mismo layout, así que no se rompen. */
+      el.style.padding='48px 60px 62px 60px';
       await new Promise(r=>setTimeout(r,50));
 
       const isSafari=/^((?!chrome|android).)*safari/i.test(navigator.userAgent);
